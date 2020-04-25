@@ -1,0 +1,4 @@
+
+LBFGS vs SGD ADAM full and stochastic approach
+
+http://sagecal.sourceforge.net/pytorch/index.html
