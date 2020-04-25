@@ -63,9 +63,10 @@ def convergence_vizualisation(loss_feedback):
 
 ############################# training and testing ###########################################
 
-def train_model(model,epochs,eta,train_input, train_target, batch_size,show_training=True):
+def train_SGD(model,epochs,train_input, train_target, batch_size,optimizer_f, show_training=True):
     
-    optimizer = torch.optim.SGD(model.parameters(), lr = eta)
+    #optimizer = torch.optim.SGD(model.parameters(), lr = eta)
+    optimizer = optimizer_f(model.parameters())
     criterion = nn.CrossEntropyLoss()
     
     loss_track = []
@@ -85,6 +86,31 @@ def train_model(model,epochs,eta,train_input, train_target, batch_size,show_trai
         loss_track.append(sum_loss)
     return loss_track
 
+def train_LBFGS(model,epochs,train_input, train_target, batch_size,optimizer_f, show_training=True):
+    
+    #optimizer = torch.optim.SGD(model.parameters(), lr = eta)
+    optimizer = optimizer_f(model.parameters())
+    criterion = nn.CrossEntropyLoss()
+    
+    loss_track = []
+    for e in range(0, epochs):
+        def closure():
+            optimizer.zero_grad()
+            output = model(train_input)
+            loss = criterion(output, train_target)
+            optimizer.zero_grad()
+            loss.backward()
+            return loss
+        optimizer.step(closure)
+        with torch.no_grad():
+            output = model(train_input)
+            loss = criterion(output, train_target)
+        if show_training:
+            if e % 25 == 0:
+                print(" epochs :",e ," the loss is :",loss)
+        loss_track.append(loss)
+    return loss_track
+
 def compute_nb_errors(model,test_input, test_target, batch_size) :
     nbr_error = 0
     for b in range(0,test_input.size(0),batch_size):
@@ -96,7 +122,7 @@ def compute_nb_errors(model,test_input, test_target, batch_size) :
 
     return 100.0*nbr_error/test_input.size(0)
 
-def evaluate_model(model_f, nb_samples, eta, epochs, batch_size, validation_ratio, validation_rounds,one_hot_labels_,show_training=False):
+def evaluate_model(model_f, train_f,optimizer_f,nb_samples, epochs, batch_size, validation_ratio, validation_rounds,one_hot_labels_,show_training=False):
     
     # Initialize error's list
     train_error = []
@@ -116,7 +142,7 @@ def evaluate_model(model_f, nb_samples, eta, epochs, batch_size, validation_rati
 
         # Create and train the model
         model_train = model_f()
-        loss_feedback[val,:]=train_model(model_train, epochs,eta,train_input, train_target, batch_size,show_training)
+        loss_feedback[val,:]=train_f(model_train, epochs,train_input, train_target, batch_size,optimizer_f, show_training)
 
         # Compute different errors
         train_error.append(compute_nb_errors(model_train, train_input, train_target,batch_size))
