@@ -1,4 +1,9 @@
 
-LBFGS vs SGD ADAM full and stochastic approach
+LBFGS vs SGD ADAM full and stochastic approach :
 
 http://sagecal.sourceforge.net/pytorch/index.html
+
+
+Zero order methode like finite difference or random search :
+
+https://cs231n.github.io/optimization-1/#gd
