@@ -5,6 +5,12 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
+import time
+
+time_start = time.clock()
+#run your code
+time_elapsed = (time.clock() - time_start)
+
 ######################### Generate Data ######################################
 
 def generate_disc_data(nb_samples, one_hot_labels = False, normalize = False):
@@ -59,6 +65,17 @@ def convergence_vizualisation(loss_feedback):
     plt.title('Loss Convergence')
     plt.legend()
     plt.show()
+    
+def time_vizualisation(loss_feedback , time_feedback):
+    mean_loss = np.mean(loss_feedback,0)
+    mean_time = np.mean(time_feedback,0)
+    
+    plt.plot(np.cumsum(mean_time, dtype=float),mean_loss,label='mean loss')
+    plt.yscale("log")
+    
+    
+    
+    
 
 
 ############################# training and testing ###########################################
@@ -70,9 +87,12 @@ def train_SGD(model,epochs,train_input, train_target, batch_size,optimizer_f, sh
     criterion = nn.CrossEntropyLoss()
     
     loss_track = []
+    time_track = []
+    
     for e in range(0, epochs):
         sum_loss = 0
         # We do this with mini-batches
+        time_start = time.clock()
         for b in range(0, train_input.size(0), batch_size):
             output = model(train_input.narrow(0, b, batch_size))
             loss = criterion(output, train_target.narrow(0,b,batch_size))
@@ -80,11 +100,41 @@ def train_SGD(model,epochs,train_input, train_target, batch_size,optimizer_f, sh
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+        time_elapsed = (time.clock() - time_start)
+        time_track.append(time_elapsed)
         if show_training:
             if e % 25 == 0:
                 print(" epochs :",e ," the loss is :",sum_loss)
         loss_track.append(sum_loss)
-    return loss_track
+    return loss_track , time_track
+
+def train_SGD_full_batch(model,epochs,train_input, train_target, batch_size,optimizer_f, show_training=True):
+    
+    #optimizer = torch.optim.SGD(model.parameters(), lr = eta)
+    optimizer = optimizer_f(model.parameters())
+    criterion = nn.CrossEntropyLoss()
+    
+    loss_track = []
+    time_track = []
+    
+    
+    for e in range(0, epochs):
+       
+    #run your code
+        time_start = time.clock()
+        # We do this with mini-batches
+        output = model(train_input)
+        loss = criterion(output, train_target)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        time_elapsed = (time.clock() - time_start)
+        time_track.append(time_elapsed)
+        if show_training:
+            if e % 25 == 0:
+                print(" epochs :",e ," the loss is :",loss.item())
+        loss_track.append(loss.item())
+    return loss_track , time_track
 
 def train_LBFGS(model,epochs,train_input, train_target, batch_size,optimizer_f, show_training=True):
     
@@ -93,7 +143,16 @@ def train_LBFGS(model,epochs,train_input, train_target, batch_size,optimizer_f, 
     criterion = nn.CrossEntropyLoss()
     
     loss_track = []
+    time_track = []
+    
+    
     for e in range(0, epochs):
+        
+        with torch.no_grad():
+            output = model(train_input)
+            loss = criterion(output, train_target)
+            
+        time_start = time.clock()
         def closure():
             optimizer.zero_grad()
             output = model(train_input)
@@ -102,14 +161,14 @@ def train_LBFGS(model,epochs,train_input, train_target, batch_size,optimizer_f, 
             loss.backward()
             return loss
         optimizer.step(closure)
-        with torch.no_grad():
-            output = model(train_input)
-            loss = criterion(output, train_target)
+        time_elapsed = (time.clock() - time_start)
+        time_track.append(time_elapsed)
+        
         if show_training:
-            if e % 25 == 0:
+            if e % 1 == 0:
                 print(" epochs :",e ," the loss is :",loss)
         loss_track.append(loss)
-    return loss_track
+    return loss_track , time_track
 
 def compute_nb_errors(model,test_input, test_target, batch_size) :
     nbr_error = 0
@@ -129,6 +188,7 @@ def evaluate_model(model_f, train_f,optimizer_f,nb_samples, epochs, batch_size, 
     validation_error = []
     test_error = []
     loss_feedback = np.zeros((validation_rounds,epochs))
+    time_feedback = np.zeros((validation_rounds,epochs))
     
     # train and evaluate the model multiple time for better statistics
     for val in range(validation_rounds):
@@ -142,7 +202,7 @@ def evaluate_model(model_f, train_f,optimizer_f,nb_samples, epochs, batch_size, 
 
         # Create and train the model
         model_train = model_f()
-        loss_feedback[val,:]=train_f(model_train, epochs,train_input, train_target, batch_size,optimizer_f, show_training)
+        loss_feedback[val,:] , time_feedback[val,:]=train_f(model_train, epochs,train_input, train_target, batch_size,optimizer_f, show_training)
 
         # Compute different errors
         train_error.append(compute_nb_errors(model_train, train_input, train_target,batch_size))
@@ -153,4 +213,4 @@ def evaluate_model(model_f, train_f,optimizer_f,nb_samples, epochs, batch_size, 
         print(f"Train error = {train_error[-1]} Validation error = {validation_error[-1]} Test error = {test_error[-1]}")
     result = [np.mean(train_error), np.std(train_error), np.mean(validation_error), np.std(validation_error), np.mean(test_error), np.std(test_error)]
     
-    return result ,loss_feedback
+    return result ,loss_feedback , time_feedback
