@@ -184,7 +184,7 @@ def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, cri
     print("\nTraining Time (in minutes) =",(time()-time0)/60)
     training_time = (time()-time0)/60
 
-    return test_losses, train_losses, accuracy
+    return test_losses, train_losses
 
 
 
