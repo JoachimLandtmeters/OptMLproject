@@ -7,6 +7,30 @@ import matplotlib.pyplot as plt
 
 from time import time
 
+
+
+
+"""
+Model building functions
+"""
+def fully_connected_NN(sizes):
+    layers = []
+    for l in range(len(sizes)-1):
+        layers.append(nn.Linear(sizes[l],sizes[l+1]))
+        if l<len(sizes)-2:
+            layers.append(nn.ReLU())
+        else:
+            layers.append(nn.LogSoftmax(dim=1))
+            
+    FCNN = nn.Sequential(*layers)
+    return FCNN
+
+
+
+
+"""
+Optimization functions
+"""
 def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, criterion):
     train_losses = []
     test_losses = []
@@ -14,6 +38,7 @@ def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, cri
     time0 = time()
     
     for e in range(epochs):
+        print("Epoch {}".format(e))
         running_loss = 0
         for images, labels in trainloader:
             # Flatten MNIST images into a 784 long vector
@@ -36,7 +61,7 @@ def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, cri
              # Compute the test loss
             # we let torch know that we dont intend to call .backward
 
-        print("Epoch {} - Training loss: {}".format(e, running_loss/len(trainloader)))
+        print("Training loss: {}".format(running_loss/len(trainloader)))
         train_losses.append( running_loss/len(trainloader))
         
         acc = accuracy_test(valloader, model)
@@ -55,7 +80,7 @@ def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, cri
                 test_loss += tloss.item()
 
 
-        print("Epoch {} - Test loss: {}".format(e, test_loss/len(valloader)))
+        print("Test loss: {}".format(test_loss/len(valloader)),"\n")
         test_losses.append(test_loss/len(valloader))
 
 
@@ -65,6 +90,10 @@ def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, cri
     return test_losses, train_losses, accuracy
 
 
+
+"""
+Prediction and performance evaluation functions
+"""
 def predict_one_img(valloader,model):
     
     images, labels = next(iter(valloader))
@@ -100,6 +129,6 @@ def accuracy_test(valloader, model):
     
     accuracy = correct_count/all_count
     print("Number Of Images Tested =", all_count)
-    print("\nModel Accuracy =", accuracy)
+    print("Model Accuracy =", accuracy)
     
     return accuracy
