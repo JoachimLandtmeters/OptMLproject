@@ -7,3 +7,8 @@ http://sagecal.sourceforge.net/pytorch/index.html
 Zero order methode like finite difference or random search :
 
 https://cs231n.github.io/optimization-1/#gd
+
+
+Implementation of Stochastic Quasi-Newton’s Method in PyTorch, Y.Li and H.Liu
+
+EA-CG: An Approximate Second-Order Method for Training Fully-Connected Neural Networks, S.Chen,C.Chou,E.Chang
