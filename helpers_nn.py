@@ -7,12 +7,23 @@ import matplotlib.pyplot as plt
 
 from time import time
 
+"""
+This file contains multiple sections, each containing functions tied to the title section:
+
+A: Model building
+B: Optimization
+C: Prediction and performance evaluation
+D: Hyperparameter tuning
+
+"""
 
 
 
 """
 Model building functions
 """
+
+# Fully connected neural network
 def fully_connected_NN(sizes):
     layers = []
     for l in range(len(sizes)-1):
@@ -24,6 +35,37 @@ def fully_connected_NN(sizes):
             
     FCNN = nn.Sequential(*layers)
     return FCNN
+
+
+# Convolutional neural network (two convolutional layers)
+# Taken from adventuresinML GitHub
+class ConvNet(nn.Module):
+    def __init__(self,image_size):
+        super(ConvNet, self).__init__()
+        # First convolutional layer is defined.
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        # Second convolutional layer is defined.
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        self.drop_out = nn.Dropout()
+        # Fully connected layers are defined
+        self.fc1 = nn.Linear(int(image_size/4) * int(image_size/4) * 64, 1000)
+        self.fc2 = nn.Linear(1000, 10)
+        
+    #this method overrides the forward method in nn.Module
+    def forward(self, x):
+        out = self.layer1(x)
+        out = self.layer2(out)
+        out = out.reshape(out.size(0), -1)
+        out = self.drop_out(out)
+        out = self.fc1(out)
+        out = self.fc2(out)
+        return out
 
 
 
@@ -112,7 +154,7 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
     print("\nTraining Time (in minutes) =",(time()-time0)/60)
     training_time = (time()-time0)/60
 
-    return test_losses, train_losses, accuracy
+    return test_losses, train_losses
 
 
 
@@ -157,3 +199,46 @@ def accuracy_test(valloader, model):
     print("Model Accuracy =", accuracy)
     
     return accuracy
+
+def accuracy_test_CNN(valloader, model):
+    correct_count, all_count = 0, 0
+    model.eval()
+    for images,labels in valloader:
+        with torch.no_grad():
+            outputs = model(images)
+            _,pred_labels=torch.max(outputs.data, 1)
+            correct_count+=(pred_labels==labels).sum().item()
+            all_count += labels.size(0)
+    
+    accuracy = correct_count/all_count
+    print("Number Of Images Tested =", all_count)
+    print("Model Accuracy =", accuracy)
+    
+    return accuracy
+
+
+
+"""
+Hyperparameter tuning functions
+"""
+def best_learning_rate(input_size, output_size, trainloader, valloader):
+    best_loss = None
+    best_learning_rate = None
+
+    grid = 0.1 * 2**np.arange(5)  
+    print("Learning rates to try:", grid)
+
+    for lr in grid:
+        model = create_model(input_size, output_size)
+        criterion = nn.NLLLoss()
+        momentum=0.9
+        optimizer = optim.SGD(model.parameters(), lr=0.003, momentum=0.9)
+
+        epochs = 15
+        test_losses, train_losses, accuracy = optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, criterion)
+        best_loss_achieved = np.min(test_losses)
+        plt.scatter(lr, best_loss_achieved)
+        if best_loss is None or best_loss_achieved < best_loss:
+            best_loss = best_loss_achieved
+            best_learning_rate = lr
+    return best_learning_rate
