@@ -105,7 +105,10 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion):
 
         print("Training loss: {}".format(running_loss/len(trainloader)))
         train_losses.append( running_loss/len(trainloader))
-
+        
+        acc = accuracy_test_CNN(valloader, model)
+        accuracy.append(acc)
+        
         test_loss = 0
         with torch.no_grad():
             model.eval()
