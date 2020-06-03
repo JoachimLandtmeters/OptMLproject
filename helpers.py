@@ -158,6 +158,7 @@ def train_LBFGS(model,epochs,train_input, train_target, batch_size,optimizer_f, 
             output = model(train_input)
             loss = criterion(output, train_target)
             optimizer.zero_grad()
+            
             loss.backward()
             return loss
         optimizer.step(closure)

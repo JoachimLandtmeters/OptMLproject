@@ -31,7 +31,7 @@ def fully_connected_NN(sizes):
 """
 Optimization functions
 """
-def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, criterion):
+def optimize(optimizer, epochs, trainloader, valloader, model, criterion , method = None ):
     train_losses = []
     test_losses = []
     accuracy = []
@@ -44,23 +44,48 @@ def optimize(optimizer, epochs, trainloader, valloader, lr, momentum, model, cri
             # Flatten MNIST images into a 784 long vector
             images = images.view(images.shape[0], -1)
 
-            # Training pass
-            optimizer.zero_grad()
+            def closure():
+                # Training pass
+                optimizer.zero_grad()
+                output = model(images)
+                loss = criterion(output, labels)
+                #This is where the model learns by backpropagating, not needed for linesearch
+                if loss.requires_grad:
+                    loss.backward()
+                return loss
 
-            output = model(images)
-            loss = criterion(output, labels)
-
-            #This is where the model learns by backpropagating
-            loss.backward()
-
+            def closure_hf():
+                # Training pass
+                
+                output = model(images)
+                loss = criterion(output, labels)
+                #This is where the model learns by backpropagating, not needed for linesearch
+                if loss.requires_grad:
+                    loss.backward(create_graph=True)
+                return loss , output
+            
             #And optimizes its weights here
-            optimizer.step()
+            if method== "LBFGS" :
+                optimizer.step(closure)
+                
+            elif method == "HF" :
+                optimizer.zero_grad()
+                optimizer.step(closure_hf, M_inv=None)
+                
+            else :
+                closure()
+                optimizer.step()
+                
+                
+            with torch.no_grad():
+                output = model(images)
+                loss_ = criterion(output, labels)
+            running_loss += loss_.item()
 
-            running_loss += loss.item()
-
-             # Compute the test loss
-            # we let torch know that we dont intend to call .backward
-
+            
+        # Compute the test loss
+        # we let torch know that we dont intend to call .backward
+        
         print("Training loss: {}".format(running_loss/len(trainloader)))
         train_losses.append( running_loss/len(trainloader))
         
