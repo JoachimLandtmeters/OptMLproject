@@ -127,7 +127,7 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion):
     print("\nTraining Time (in minutes) =",(time()-time0)/60)
     training_time = (time()-time0)/60
 
-    return train_losses, test_losses
+    return train_losses, test_losses, accuracy
 
 
 def optimize(optimizer, epochs, trainloader, valloader, model, criterion , method = None ):
@@ -211,7 +211,7 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
     print("\nTraining Time (in minutes) =",(time()-time0)/60)
     training_time = (time()-time0)/60
 
-    return test_losses, train_losses
+    return test_losses, train_losses, accuracy
 
 
 
