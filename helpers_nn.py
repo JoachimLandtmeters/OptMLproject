@@ -73,6 +73,60 @@ class ConvNet(nn.Module):
 """
 Optimization functions
 """
+
+# CNN optimization
+def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion):
+    train_losses = []
+    test_losses = []
+    accuracy = []
+    time0 = time()
+    
+    for e in range(epochs):
+        print("Epoch {}".format(e))
+        running_loss = 0
+        for images, labels in trainloader:
+            
+            # Training pass
+            optimizer.zero_grad()
+
+            output = model(images)
+            loss = criterion(output, labels)
+
+            #This is where the model learns by backpropagating
+            loss.backward()
+
+            #And optimizes its weights here
+            optimizer.step()
+
+            running_loss += loss.item()
+
+             # Compute the test loss
+            # we let torch know that we dont intend to call .backward
+
+        print("Training loss: {}".format(running_loss/len(trainloader)))
+        train_losses.append( running_loss/len(trainloader))
+
+        test_loss = 0
+        with torch.no_grad():
+            model.eval()
+            for test_images, test_labels in valloader:
+
+                test_output = model(test_images)
+                tloss = criterion(test_output, test_labels)
+
+                test_loss += tloss.item()
+
+
+        print("Test loss: {}".format(test_loss/len(valloader)),"\n")
+        test_losses.append(test_loss/len(valloader))
+
+
+    print("\nTraining Time (in minutes) =",(time()-time0)/60)
+    training_time = (time()-time0)/60
+
+    return train_losses, test_losses
+
+
 def optimize(optimizer, epochs, trainloader, valloader, model, criterion , method = None ):
     train_losses = []
     test_losses = []
