@@ -88,22 +88,18 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion, me
         print("Epoch {}".format(e))
         running_loss = 0
         for images, labels in trainloader:
+            
             def closure_sd():
-                 optimizer.zero_grad()
-                 output = model(images)
-                 loss = criterion(output, labels)
-                 loss.backward()
-                 return loss
-
-            if method == "SdLBFGS":
                 optimizer.zero_grad()
                 output = model(images)
                 loss = criterion(output, labels)
-                #This is where the model learns by backpropagating
                 loss.backward()
-                optimizer.step(closure_sd)
-                running_loss += loss.item()
+                return loss
 
+            if method == "SdLBFGS":
+               
+                optimizer.step(closure_sd)
+                
             else:
                 optimizer.zero_grad()
                 output = model(images)
@@ -111,8 +107,12 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion, me
                 #This is where the model learns by backpropagating
                 loss.backward()#And optimizes its weights here
                 optimizer.step()
-                running_loss += loss.item()
-
+           
+            
+            with torch.no_grad():
+                output = model(images)
+                loss_ = criterion(output, labels)
+            running_loss += loss_.item()
 
 
              # Compute the test loss
