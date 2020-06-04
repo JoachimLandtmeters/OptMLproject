@@ -184,8 +184,7 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
                 loss = criterion(output, labels)
                 loss.backward()
                 return loss
-
-
+            
 
             #And optimizes its weights here
             if method== "LBFGS" :
@@ -201,6 +200,12 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
                 #loss = criterion(output, labels)
                 #loss.backward()
                 optimizer.step(closure_sd)
+                
+            elif method == "CurveBall":
+                # create closures to compute the forward pass, and the loss
+                model_fn = lambda: model(images)
+                loss_fn = lambda pred: criterion(pred, labels)
+                (loss, predictions) = optimizer.step(model_fn, loss_fn)
 
             else :
                 closure()
