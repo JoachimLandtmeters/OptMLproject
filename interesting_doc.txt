@@ -12,3 +12,9 @@ https://cs231n.github.io/optimization-1/#gd
 Implementation of Stochastic Quasi-Newton’s Method in PyTorch, Y.Li and H.Liu
 
 EA-CG: An Approximate Second-Order Method for Training Fully-Connected Neural Networks, S.Chen,C.Chou,E.Chang
+
+
+PyTorch CurveBall - A second-order optimizer for deep networks
+    paper : https://arxiv.org/pdf/1805.08095.pdf
+    git : https://github.com/jotaf98/pytorch-curveball
+
