@@ -1,6 +1,9 @@
 import torch
 from torch import Tensor
 from torch import nn
+import torch.nn.functional as F
+from torch.autograd import Variable
+
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -32,7 +35,7 @@ def fully_connected_NN(sizes):
             layers.append(nn.ReLU())
         else:
             layers.append(nn.LogSoftmax(dim=1))
-            
+
     FCNN = nn.Sequential(*layers)
     return FCNN
 
@@ -56,7 +59,7 @@ class ConvNet(nn.Module):
         # Fully connected layers are defined
         self.fc1 = nn.Linear(int(image_size/4) * int(image_size/4) * 64, 1000)
         self.fc2 = nn.Linear(1000, 10)
-        
+
     #this method overrides the forward method in nn.Module
     def forward(self, x):
         out = self.layer1(x)
@@ -75,40 +78,52 @@ Optimization functions
 """
 
 # CNN optimization
-def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion):
+def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion, method = None ):
     train_losses = []
     test_losses = []
     accuracy = []
     time0 = time()
-    
+
     for e in range(epochs):
         print("Epoch {}".format(e))
         running_loss = 0
         for images, labels in trainloader:
-            
-            # Training pass
-            optimizer.zero_grad()
+            def closure_sd():
+                 optimizer.zero_grad()
+                 output = model(images)
+                 loss = criterion(output, labels)
+                 loss.backward()
+                 return loss
 
-            output = model(images)
-            loss = criterion(output, labels)
+            if method == "SdLBFGS":
+                optimizer.zero_grad()
+                output = model(images)
+                loss = criterion(output, labels)
+                #This is where the model learns by backpropagating
+                loss.backward()
+                optimizer.step(closure_sd)
+                running_loss += loss.item()
 
-            #This is where the model learns by backpropagating
-            loss.backward()
+            else:
+                optimizer.zero_grad()
+                output = model(images)
+                loss = criterion(output, labels)
+                #This is where the model learns by backpropagating
+                loss.backward()#And optimizes its weights here
+                optimizer.step()
+                running_loss += loss.item()
 
-            #And optimizes its weights here
-            optimizer.step()
 
-            running_loss += loss.item()
 
              # Compute the test loss
             # we let torch know that we dont intend to call .backward
 
         print("Training loss: {}".format(running_loss/len(trainloader)))
         train_losses.append( running_loss/len(trainloader))
-        
+
         acc = accuracy_test_CNN(valloader, model)
         accuracy.append(acc)
-        
+
         test_loss = 0
         with torch.no_grad():
             model.eval()
@@ -135,7 +150,7 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
     test_losses = []
     accuracy = []
     time0 = time()
-    
+
     for e in range(epochs):
         print("Epoch {}".format(e))
         running_loss = 0
@@ -155,39 +170,55 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
 
             def closure_hf():
                 # Training pass
-                
+
                 output = model(images)
                 loss = criterion(output, labels)
                 #This is where the model learns by backpropagating, not needed for linesearch
                 if loss.requires_grad:
                     loss.backward(create_graph=True)
                 return loss , output
-            
+
+            def closure_sd():
+                optimizer.zero_grad()
+                output = model(images)
+                loss = criterion(output, labels)
+                loss.backward()
+                return loss
+
+
+
             #And optimizes its weights here
             if method== "LBFGS" :
                 optimizer.step(closure)
-                
+
             elif method == "HF" :
                 optimizer.zero_grad()
                 optimizer.step(closure_hf, M_inv=None)
-                
+
+            elif method == "SdLBFGS" :
+                optimizer.zero_grad()
+                output = model(images)
+                loss = criterion(output, labels)
+                loss.backward()
+                optimizer.step(closure_sd)
+
             else :
                 closure()
                 optimizer.step()
-                
-                
+
+
             with torch.no_grad():
                 output = model(images)
                 loss_ = criterion(output, labels)
             running_loss += loss_.item()
 
-            
+
         # Compute the test loss
         # we let torch know that we dont intend to call .backward
-        
+
         print("Training loss: {}".format(running_loss/len(trainloader)))
         train_losses.append( running_loss/len(trainloader))
-        
+
         acc = accuracy_test(valloader, model)
         accuracy.append(acc)
 
@@ -219,20 +250,20 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
 Prediction and performance evaluation functions
 """
 def predict_one_img(valloader,model):
-    
+
     images, labels = next(iter(valloader))
     img = images[0].view(1, 784)
     with torch.no_grad():
         logps = model(img)
     ps = torch.exp(logps)
     probab = list(ps.numpy()[0])
-    
+
     predictions = probab.index(max(probab))
     print("Probabilities computed for each digit =\n",probab)
     print("\nPredicted Digit =", predictions)
     print("Actual Digit =",labels[0].numpy())
     #view_classify(img.view(1, 28, 28), ps)
-    
+
     return probab, predictions
 
 def accuracy_test(valloader, model):
@@ -250,11 +281,11 @@ def accuracy_test(valloader, model):
             if(true_label == pred_label):
                 correct_count += 1
             all_count += 1
-    
+
     accuracy = correct_count/all_count
     print("Number Of Images Tested =", all_count)
     print("Model Accuracy =", accuracy)
-    
+
     return accuracy
 
 def accuracy_test_CNN(valloader, model):
@@ -266,11 +297,11 @@ def accuracy_test_CNN(valloader, model):
             _,pred_labels=torch.max(outputs.data, 1)
             correct_count+=(pred_labels==labels).sum().item()
             all_count += labels.size(0)
-    
+
     accuracy = correct_count/all_count
     print("Number Of Images Tested =", all_count)
     print("Model Accuracy =", accuracy)
-    
+
     return accuracy
 
 
@@ -282,7 +313,7 @@ def best_learning_rate(input_size, output_size, trainloader, valloader):
     best_loss = None
     best_learning_rate = None
 
-    grid = 0.1 * 2**np.arange(5)  
+    grid = 0.1 * 2**np.arange(5)
     print("Learning rates to try:", grid)
 
     for lr in grid:
