@@ -196,10 +196,10 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
                 optimizer.step(closure_hf, M_inv=None)
 
             elif method == "SdLBFGS" :
-                optimizer.zero_grad()
-                output = model(images)
-                loss = criterion(output, labels)
-                loss.backward()
+                #optimizer.zero_grad()
+                #output = model(images)
+                #loss = criterion(output, labels)
+                #loss.backward()
                 optimizer.step(closure_sd)
 
             else :
