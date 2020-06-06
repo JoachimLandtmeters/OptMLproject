@@ -90,7 +90,7 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion, me
         print("Epoch {}".format(e))
         running_loss = 0
         for images, labels in trainloader:
-
+            
             def closure():
                 # Training pass
                 optimizer.zero_grad()
@@ -110,7 +110,7 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion, me
                 if loss.requires_grad:
                     loss.backward(create_graph=True)
                 return loss , output
-
+            
             def closure_sd():
                 optimizer.zero_grad()
                 output = model(images)
@@ -132,7 +132,7 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion, me
                 loss = criterion(output, labels)
                 loss.backward()
                 optimizer.step(closure_sd)
-
+                
             elif method == "CurveBall":
                 # create closures to compute the forward pass, and the loss
                 model_fn = lambda: model(images)
@@ -142,8 +142,8 @@ def optimize_CNN(optimizer, epochs, trainloader, valloader, model, criterion, me
             else :
                 closure()
                 optimizer.step()
-
-
+           
+            
             with torch.no_grad():
                 output = model(images)
                 loss_ = criterion(output, labels)
@@ -220,7 +220,7 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
                 loss = criterion(output, labels)
                 loss.backward()
                 return loss
-
+            
 
             #And optimizes its weights here
             if method== "LBFGS" :
@@ -231,12 +231,12 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
                 optimizer.step(closure_hf, M_inv=None)
 
             elif method == "SdLBFGS" :
-                optimizer.zero_grad()
-                output = model(images)
-                loss = criterion(output, labels)
-                loss.backward()
+                #optimizer.zero_grad()
+                #output = model(images)
+                #loss = criterion(output, labels)
+                #loss.backward()
                 optimizer.step(closure_sd)
-
+                
             elif method == "CurveBall":
                 # create closures to compute the forward pass, and the loss
                 model_fn = lambda: model(images)
@@ -260,11 +260,11 @@ def optimize(optimizer, epochs, trainloader, valloader, model, criterion , metho
         print("Training loss: {}".format(running_loss/len(trainloader)))
         train_losses.append( running_loss/len(trainloader))
 
-
+        
         test_accuracy.append(accuracy_test(valloader, model))
         train_accuracy.append(accuracy_test(trainloader, model))
-
-
+        
+        
         test_loss = 0
         with torch.no_grad():
             model.eval()
@@ -382,7 +382,7 @@ def learning_rate_optimization_SGD(input_size, output_size, trainloader, valload
     test_accuracy = []
     times = []
     sizes = [input_size,128,64,output_size]
-
+    
     print("Learning rates to try:", grid)
 
     for lr in grid:
@@ -392,13 +392,13 @@ def learning_rate_optimization_SGD(input_size, output_size, trainloader, valload
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
         train_losses, test_losses, train_accuracies, test_accuracies,train_time = optimize(optimizer, epochs, trainloader, valloader, model, criterion)
-
+        
         times.append(train_time)
         training_loss.append(train_losses)
         test_loss.append(test_losses)
         training_accuracy.append(train_accuracies)
         test_accuracy.append( test_accuracies )
-
+        
 
         #plt.scatter(lr, best_loss_achieved)
         #if best_loss is None or best_loss_achieved < best_loss:
@@ -417,14 +417,14 @@ def learning_rate_optimization_SGD_CNN(input_size, output_size, trainloader, val
     dataiter = iter(trainloader)
     images,_=dataiter.next()
     image_size=images[0].shape[1]
-
+    
     print("Learning rates to try:", grid)
 
     for lr in grid:
 
         criterion = nn.CrossEntropyLoss()
         model=ConvNet(image_size)
-
+        
         momentum=0.9
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
@@ -434,8 +434,8 @@ def learning_rate_optimization_SGD_CNN(input_size, output_size, trainloader, val
         test_loss.append(test_losses)
         training_accuracy.append(train_accuracies)
         test_accuracy.append( test_accuracies )
-
-
+        
+        
 
         #plt.scatter(lr, best_loss_achieved)
         #if best_loss is None or best_loss_achieved < best_loss:
@@ -445,18 +445,18 @@ def learning_rate_optimization_SGD_CNN(input_size, output_size, trainloader, val
 
 
 def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, history_size_grid, epochs, model_NN):
-
-
+    
+    
     training_loss =[]
     test_loss = []
     training_accuracy = []
     test_accuracy = []
     times = []
 
-
+    
     for bs in batchsize_grid:
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=bs, shuffle=True)
-        valloader = torch.utils.data.DataLoader(valset, batch_size=bs, shuffle=True)
+        valloader = torch.utils.data.DataLoader(valset, batch_size=bs, shuffle=True)    
         dataiter = iter(trainloader)
         images,_=dataiter.next()
         image_size=images[0].shape[1]
@@ -465,29 +465,29 @@ def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, his
         for hs in history_size_grid:
             print("Minibatch size: ", bs)
             print("History size: ",hs)
-
+            
             if model_NN=="FCNN":
                 sizes = [input_size,128,64,output_size]
                 model = fully_connected_NN(sizes)
                 criterion = nn.NLLLoss()
                 optimizer=optim.LBFGS(model.parameters(),max_iter=10,history_size=hs, line_search_fn='strong_wolfe')
-
+                
             elif model_NN=="CNN":
                 model=ConvNet(image_size)
                 criterion = nn.CrossEntropyLoss()
                 optimizer=optim.LBFGS(model.parameters(),max_iter=10,history_size=hs)
-
-
+               
+           
             if model_NN=="FCNN":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
             elif model_NN=="CNN":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
-
-
+                
+        
             times.append(train_time)
             training_loss.append(train_losses)
             test_loss.append(test_losses)
             training_accuracy.append(train_accuracies)
             test_accuracy.append( test_accuracies )
-
+       
     return  training_loss, test_loss,training_accuracy, test_accuracy ,times
