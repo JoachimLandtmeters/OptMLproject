@@ -518,7 +518,7 @@ def hyperparameters_tuning_LBFGS_new_minibatch(trainset, valset, batchsize_grid,
         
         for max_iter_ in max_iter_grid:
             print("Minibatch size: ", bs)
-            print("History size: ",hs)
+            print("History size: ",max_iter_)
             parameter = []
             if model_NN=="FCNN":
                 sizes = [input_size,128,64,output_size]
