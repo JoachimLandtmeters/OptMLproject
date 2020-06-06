@@ -472,12 +472,12 @@ def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, his
                 sizes = [input_size,128,64,output_size]
                 model = fully_connected_NN(sizes)
                 criterion = nn.NLLLoss()
-                optimizer=optim.LBFGS(model.parameters(),max_iter=10,history_size=hs, line_search_fn='strong_wolfe')
+                optimizer=optim.LBFGS(model.parameters(),max_iter=hs,history_size=hs, line_search_fn='strong_wolfe')
 
             elif model_NN=="CNN":
                 model=ConvNet(image_size)
                 criterion = nn.CrossEntropyLoss()
-                optimizer=optim.LBFGS(model.parameters(),max_iter=10,history_size=hs, line_search_fn='strong_wolfe')
+                optimizer=optim.LBFGS(model.parameters(),max_iter=hs,history_size=hs, line_search_fn='strong_wolfe')
 
 
             if model_NN=="FCNN":
