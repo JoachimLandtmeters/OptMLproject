@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 
 from time import time
 
+from lbfgsnew import LBFGSNew
+
 """
 This file contains multiple sections, each containing functions tied to the title section:
 
@@ -475,7 +477,7 @@ def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, his
             elif model_NN=="CNN":
                 model=ConvNet(image_size)
                 criterion = nn.CrossEntropyLoss()
-                optimizer=optim.LBFGS(model.parameters(),max_iter=10,history_size=hs)
+                optimizer=optim.LBFGS(model.parameters(),max_iter=10,history_size=hs, line_search_fn='strong_wolfe')
 
 
             if model_NN=="FCNN":
@@ -491,3 +493,68 @@ def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, his
             test_accuracy.append( test_accuracies )
 
     return  training_loss, test_loss,training_accuracy, test_accuracy ,times
+
+def hyperparameters_tuning_LBFGS_new_minibatch(trainset, valset, batchsize_grid, max_iter_grid, epochs, model_NN):
+
+    training_loss =[]
+    test_loss = []
+    training_accuracy = []
+    test_accuracy = []
+    times = []
+    parameters = []
+    results = []
+    Names = ["training_loss","training_accuracy","test_loss","test_accuracy","times","parameters: batch iter"]
+    results.append(Names)
+    
+    for bs in batchsize_grid:
+        
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=bs, shuffle=True)
+        valloader = torch.utils.data.DataLoader(valset, batch_size=bs, shuffle=True)
+        dataiter = iter(trainloader)
+        images,_=dataiter.next()
+        image_size=images[0].shape[1]
+        input_size = int(image_size**2)
+        output_size = 10
+        
+        for max_iter_ in max_iter_grid:
+            print("Minibatch size: ", bs)
+            print("History size: ",hs)
+            parameter = []
+            if model_NN=="FCNN":
+                sizes = [input_size,128,64,output_size]
+                model = fully_connected_NN(sizes)
+                criterion = nn.NLLLoss()
+                optimizer=LBFGSNew(model.parameters(), max_iter=max_iter_, history_size=10, line_search_fn=True, batch_mode=True)
+
+            elif model_NN=="CNN":
+                model=ConvNet(image_size)
+                criterion = nn.CrossEntropyLoss()
+                optimizer=LBFGSNew(model.parameters(), max_iter=max_iter_, history_size=10, line_search_fn=True, batch_mode=True)
+
+
+            if model_NN=="FCNN":
+                train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
+            elif model_NN=="CNN":
+                train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
+             
+            # save the parameters 
+            parameter = []
+            parameter.append(bs)
+            parameter.append(max_iter_)
+            
+            parameters.append(parameter)
+            times.append(train_time)
+            training_loss.append(train_losses)
+            test_loss.append(test_losses)
+            training_accuracy.append(train_accuracies)
+            test_accuracy.append( test_accuracies )
+            
+    results.append(training_loss)
+    results.append(training_accuracy)
+    results.append(test_loss)
+    results.append(test_accuracy)
+    results.append(times)
+    results.append(parameters)
+
+    return  results
+
