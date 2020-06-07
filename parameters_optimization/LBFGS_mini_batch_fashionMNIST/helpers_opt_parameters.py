@@ -488,6 +488,8 @@ def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, his
 
             if model_NN=="FCNN":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
+            elif model_NN=="FCNN2":
+                train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
             elif model_NN=="CNN":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
 
