@@ -446,7 +446,7 @@ def learning_rate_optimization_SGD_CNN(input_size, output_size, trainloader, val
     return  training_loss, test_loss,training_accuracy, test_accuracy,times
 
 
-def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, history_size_grid, max_it,epochs, model_NN):
+def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, history_size_grid, max_it, epochs, model_NN):
 
 
     training_loss =[]
@@ -483,14 +483,17 @@ def hyperparameters_tuning_LBFGS_minibatch(trainset, valset, batchsize_grid, his
             elif model_NN=="CNN":
                 model=ConvNet(image_size)
                 criterion = nn.CrossEntropyLoss()
-                optimizer=optim.LBFGS(model.parameters(),max_iter=hs,history_size=hs, line_search_fn='strong_wolfe')
+                optimizer=optim.LBFGS(model.parameters(),max_iter=max_it,history_size=hs, line_search_fn=None)
+                
+            elif model_NN=="CNN2":
+                model=ConvNet(image_size)
+                criterion = nn.CrossEntropyLoss()
+                optimizer=optim.LBFGS(model.parameters(),max_iter=hs,history_size=hs, line_search_fn=None)
 
 
-            if model_NN=="FCNN":
+            if model_NN=="FCNN" or model_NN=="FCNN2":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
-            elif model_NN=="FCNN2":
-                train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
-            elif model_NN=="CNN":
+            elif model_NN=="CNN" or model_NN=="CNN2":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
 
 
