@@ -1,0 +1,74 @@
+SGD
+FCNN
+lr = 0.01
+test accuracy 98
+CNN
+lr = 0.01
+test accuracy 99.3
+
+
+---------
+LBFGS fullbatch
+FCNN
+history_size = 10,20
+the model overfit (test loss start to increase again after 15 epochs, the test
+accuracy stabilize around 97% whil train accuracy is around 100%)
+test accuracy = 97.2
+
+CNN
+epochs = 15
+history_size = 10 with no overfit
+test accuracy = 99
+(work well with 5 and 20 as well)
+
+---------
+LBFGS minibatch
+FCNN
+batch_size = 1024
+history_size = 20
+test accuracy = 97.6
+(weird test loss: much bigger than train loss and almost constant
+while test accuracy improves from 94 to 97 where stabilizes)
+
+
+CNN
+MISSING
+
+-----------
+LBFGSNew minibatch
+
+FCNN
+epochs = 15
+batch_size = 128, history_size=max_iter = 6
+batch_size = 32, history_size=max_iter = 3
+test accuracy = 97.1
+
+batch_size = 1024,  history_size=max_iter = 15
+batch_size = 1024,  history_size=max_iter = 25 good but overfit, test acc = 97.7
+
+Running for 30 epochs, the result remain quite the same (test accuracy is 97.3)
+
+CNN
+amazing!
+epochs = 10
+batch_size = 1024,  history_size=max_iter = 5 to run more if we want, test_acc = 99.3
+They all work already well for 10 epochs (expect 512,5 -> it already overfit)
+
+---------
+
+SdLBFGS  (no parameters optimization since it works just with default param.)
+FCNN
+It doesn't converge really fast but there is no overfit
+test accuracy 96.8
+
+CNN
+Really weird test and train loss.... we can say that the method converge??
+even if there is good accuracy
+
+
+------
+CURVEBALL
+
+FCNN
+Nice!
+test accuracy = 98.1
