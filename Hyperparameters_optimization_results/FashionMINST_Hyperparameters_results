@@ -1,0 +1,56 @@
+SGD
+
+FCNN
+lr = 0.01
+test accuracy = 88.7
+
+CNN
+lr = 0.001 (0.01 overfits a lot)
+test accuracy = 90
+------
+
+LBFGS fullbatch
+
+FCNN
+history_size = 20 overfits a lot
+
+history_size = 5,10 good but still overfit (when test accuracy stabilizes)
+test accuracy = 88
+
+CNN
+epochs = 15
+Same as FCNN
+test accuracy = 91.6
+
+Both converge in 15 epochs
+--------
+LBFGS minibatch
+
+FCNN
+
+It does not work well with small batches
+
+batch_size = 1024
+history_size = 10
+(test loss not really converging)
+test accuracy = 87.4
+
+batch_size = 4096
+history_size = 10
+test acc = 86.9
+it s the only one that really converges (wrt test loss)
+
+CNN
+batch_size = 4096
+history_size = 10
+test acc = 87.4
+
+-------
+SdLBFGS
+FCNN
+works well
+test acc = 87.7
+
+CNN
+in only 10 epochs it works well and test accuracy =90.9
+We cn try with more epochs
