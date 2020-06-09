@@ -1,0 +1,1 @@
+[“SGD_lr0.01”,”LBFGSfullbatch_hs5”, “LBFGSfullbatch_hs10”,”LBFGSminibatch_bs1024_hs20”,”LBFGSnewminibatch_bs1024_hs15”,”LBFGSnewminibatch_bs32_hs3”, “SDLBFGS”,"CurveBall"]
