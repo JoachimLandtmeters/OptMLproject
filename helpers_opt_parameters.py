@@ -634,11 +634,11 @@ def hyperparameters_tuning_Curveball_minibatch(trainset, valset, batchsize_grid,
         elif model_NN=="CNN":
             model=ConvNet(image_size)
             criterion = nn.CrossEntropyLoss()
-            optimizer=CurveBall(model.parameters(),lr=0.1,momentum=0.9)
+            optimizer=CurveBall(model.parameters(),lr=-1,momentum=-1)
         elif model_NN=="CNN_BN":
             model=ConvNet_BN(image_size)
             criterion = nn.CrossEntropyLoss()
-            optimizer=CurveBall(model.parameters(),lr=0.1,momentum=0.9)
+            optimizer=CurveBall(model.parameters(),lr=-1,momentum=-1)
 
 
         if model_NN=="FCNN":
