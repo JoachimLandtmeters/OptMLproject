@@ -51,12 +51,13 @@ Running for 30 epochs, the result remain quite the same (test accuracy is 97.3)
 CNN
 amazing!
 epochs = 10
-batch_size = 1024,  history_size=max_iter = 5 to run more if we want, test_acc = 99.3
+batch_size = 1024,  history_size=max_tier = 5 to run more if we want, test_acc = 99.3
 They all work already well for 10 epochs (expect 512,5 -> it already overfit)
 
 ---------
 
 SdLBFGS  (no parameters optimization since it works just with default param.)
+
 FCNN
 It doesn't converge really fast but there is no overfit
 test accuracy 96.8
@@ -72,3 +73,7 @@ CURVEBALL
 FCNN
 Nice!
 test accuracy = 98.1
+
+CNN
+batch_size=256, lr=0.1, momentum=0.9
+Test accuracy = 98.9
