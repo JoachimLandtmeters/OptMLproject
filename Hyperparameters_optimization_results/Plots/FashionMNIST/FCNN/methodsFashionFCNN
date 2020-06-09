@@ -1,0 +1,1 @@
+SGD_lr=0.01, LBFGSfullbatch_hs5, LBFGSminibatch_bs4096_hs10, LBFGSnewminibatch_bs32_hs3, SDLBFGS_bs64, Curveball_bs64

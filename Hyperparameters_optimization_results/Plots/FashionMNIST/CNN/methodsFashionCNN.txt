@@ -1,0 +1,4 @@
+SGD_lr0.001, LBFGSfullbatch_hs10, LBFGSminibatch_bs4096_hs10, LBFGSnewminibatch_bs1024_hs5
+SDLBFGS_bs64
+
+epochs = 15

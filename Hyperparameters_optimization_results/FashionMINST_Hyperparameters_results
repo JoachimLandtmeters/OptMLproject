@@ -19,7 +19,7 @@ test accuracy = 88
 
 CNN
 epochs = 15
-Same as FCNN
+Same as FCNN, but without too much overfitting if only 15 epochs are run
 test accuracy = 91.6
 
 Both converge in 15 epochs
@@ -46,11 +46,33 @@ history_size = 10
 test acc = 87.4
 
 -------
+LBFGSNew minibatch
+
+FCNN
+batch_size=32, history_size=3
+Test accuracy = 88.5
+
+
+CNN
+batch_size=1024, history_size=5
+Test accuracy = 88.8, no overfit, nice trends of test loss and train loss
+
+
+
+-------
 SdLBFGS
+
 FCNN
 works well
 test acc = 87.7
 
 CNN
-in only 10 epochs it works well and test accuracy =90.9
-We cn try with more epochs
+Works well
+test accuracy =90.9
+
+--------
+CurveBall
+
+FCNN
+batch_size = 64
+Test accuracy = 88.9
