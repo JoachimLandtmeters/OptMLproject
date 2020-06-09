@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from time import time
 
 from lbfgsnew import LBFGSNew
+from curveball import CurveBall
 
 """
 This file contains multiple sections, each containing functions tied to the title section:
@@ -56,6 +57,38 @@ class ConvNet(nn.Module):
         # Second convolutional layer is defined.
         self.layer2 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        self.drop_out = nn.Dropout()
+        # Fully connected layers are defined
+        self.fc1 = nn.Linear(int(image_size/4) * int(image_size/4) * 64, 1000)
+        self.fc2 = nn.Linear(1000, 10)
+
+    #this method overrides the forward method in nn.Module
+    def forward(self, x):
+        out = self.layer1(x)
+        out = self.layer2(out)
+        out = out.reshape(out.size(0), -1)
+        out = self.drop_out(out)
+        out = self.fc1(out)
+        out = self.fc2(out)
+        return out
+    
+# Convolutional neural network (two convolutional layers)
+# Taken from adventuresinML GitHub
+class ConvNet_BN(nn.Module):
+    def __init__(self,image_size):
+        super(ConvNet_BN, self).__init__()
+        # First convolutional layer is defined.
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2))
+        # Second convolutional layer is defined.
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
         self.drop_out = nn.Dropout()
@@ -530,11 +563,19 @@ def hyperparameters_tuning_LBFGS_new_minibatch(trainset, valset, batchsize_grid,
                 model=ConvNet(image_size)
                 criterion = nn.CrossEntropyLoss()
                 optimizer=LBFGSNew(model.parameters(), max_iter=max_iter_, history_size=max_iter_, line_search_fn=True, batch_mode=True)
+            elif model_NN=="CNN_BN":
+                model=ConvNet_BN(image_size)
+                criterion = nn.CrossEntropyLoss()
+                optimizer=LBFGSNew(model.parameters(), max_iter=max_iter_, history_size=max_iter_, line_search_fn=True, batch_mode=True)
 
 
             if model_NN=="FCNN":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
+                
             elif model_NN=="CNN":
+                train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
+       
+            elif model_NN=="CNN_BN":
                 train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "LBFGS")
              
             # save the parameters 
@@ -548,6 +589,77 @@ def hyperparameters_tuning_LBFGS_new_minibatch(trainset, valset, batchsize_grid,
             test_loss.append(test_losses)
             training_accuracy.append(train_accuracies)
             test_accuracy.append( test_accuracies )
+            
+    results.append(training_loss)
+    results.append(training_accuracy)
+    results.append(test_loss)
+    results.append(test_accuracy)
+    results.append(times)
+    results.append(parameters)
+
+    return  results
+
+def hyperparameters_tuning_Curveball_minibatch(trainset, valset, batchsize_grid, epochs, model_NN):
+
+    training_loss =[]
+    test_loss = []
+    training_accuracy = []
+    test_accuracy = []
+    times = []
+    parameters = []
+    results = []
+    Names = ["training_loss","training_accuracy","test_loss","test_accuracy","times","parameters: batch iter"]
+    results.append(Names)
+    
+    for bs in batchsize_grid:
+        
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=bs, shuffle=True)
+        valloader = torch.utils.data.DataLoader(valset, batch_size=bs, shuffle=True)
+        dataiter = iter(trainloader)
+        images,_=dataiter.next()
+        image_size=images[0].shape[1]
+        input_size = int(image_size**2)
+        output_size = 10
+        
+        
+        print("Minibatch size: ", bs)
+
+        parameter = []
+        if model_NN=="FCNN":
+            sizes = [input_size,128,64,output_size]
+            model = fully_connected_NN(sizes)
+            criterion = nn.NLLLoss()
+            optimizer=CurveBall(model.parameters(),lr=0.1,momentum=0.9)
+
+        elif model_NN=="CNN":
+            model=ConvNet(image_size)
+            criterion = nn.CrossEntropyLoss()
+            optimizer=CurveBall(model.parameters(),lr=0.1,momentum=0.9)
+        elif model_NN=="CNN_BN":
+            model=ConvNet_BN(image_size)
+            criterion = nn.CrossEntropyLoss()
+            optimizer=CurveBall(model.parameters(),lr=0.1,momentum=0.9)
+
+
+        if model_NN=="FCNN":
+            train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize(optimizer, epochs, trainloader, valloader, model,criterion,method = "CurveBall")
+
+        elif model_NN=="CNN":
+            train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "CurveBall")
+
+        elif model_NN=="CNN_BN":
+            train_losses, test_losses, train_accuracies, test_accuracies,train_time=optimize_CNN(optimizer, epochs, trainloader, valloader, model,criterion,method = "CurveBall")
+
+        # save the parameters 
+        parameter = []
+        parameter.append(bs)
+
+        parameters.append(parameter)
+        times.append(train_time)
+        training_loss.append(train_losses)
+        test_loss.append(test_losses)
+        training_accuracy.append(train_accuracies)
+        test_accuracy.append( test_accuracies )
             
     results.append(training_loss)
     results.append(training_accuracy)
