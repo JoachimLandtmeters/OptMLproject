@@ -36,11 +36,11 @@ The work is subdivided in four folders:
 
     The *Hyperparameters_Tuning/Data/Mod/Meth* folder contains then all the results obtained training model *Mod* on dataset *Data* using the optimization method *Meth*.
 
-  The results consist of in ``.txt``  files that contains train and test accuracy, train and test loss and training time for each epoch of the training, and for every different combination of parameters.
+  The results consist of in ``.txt``  files that contain train and test accuracy, train and test loss and training time for each epoch of the training, and for every different combination of parameters.
     Where it was needed, a notebook named ``plot_results.ipynb`` is present. It helped to analyze the results in order to select the best parameters. Its output is saved in the folder **best_results**.
 
   - The code used to produce the results is contained  in the folder **Notebooks**.
-  Inside here the ``.ipynb`` notebooks follow the same naming convention as before, indicationg method, dataset and model used.
+  Inside here the ``.ipynb`` notebooks follow the same naming convention as before, indicating method, dataset and model used.
   For practical reasons (parallel running of different notebooks), there is one notebook for each method and architecture.
   The file ``helper.py`` contains all the functions used for optimization.
     The remaining files ``curveball.py`` (LINK), ``sdlbfgs.py`` (LINK) and ``lbfgsnew.py`` (LINK) contain the methods that we used that are not already implemented in Pytorch package. The source is previously indicated.
